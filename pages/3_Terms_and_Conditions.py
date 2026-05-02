@@ -2,13 +2,6 @@ import streamlit as st
 
 st.set_page_config(page_title="Terms & Conditions", layout="wide")
 
-st.sidebar.title("📊 Navigation")
-st.sidebar.markdown("""
-- Backtester
-- Signal Scanner
-- Terms & Conditions
-""")
-
 st.title("📄 Terms & Conditions")
 
 st.markdown("""

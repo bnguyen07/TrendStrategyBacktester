@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from utils import download_data_cached, trend_strategy, pullback_strategy
 
-st.set_page_config(page_title="Trend Backtester", layout="wide")
+st.set_page_config(page_title="Multi-Strategy Backtester", layout="wide")
 
 if "accepted_terms" not in st.session_state:
     st.session_state.accepted_terms = False
@@ -28,8 +28,8 @@ if "top5" not in st.session_state:
     st.session_state.top5 = None
 if "equity_curves" not in st.session_state:
     st.session_state.equity_curves = {}
-if "tickers" not in st.session_state:
-    st.session_state.tickers = "NVDA, MSFT, AAPL, AMZN, GOOGL, META, TSLA, AVGO, LLY, JPM, V, MA, COST, WMT"
+if "ticker_input" not in st.session_state:
+    st.session_state.ticker_input = "NVDA, MSFT, AAPL, AMZN, GOOGL, META, TSLA, AVGO, LLY, JPM, V, MA, COST, WMT"
 if "start_date" not in st.session_state:
     st.session_state.start_date = pd.to_datetime("2018-01-01")
 
@@ -50,8 +50,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="big-title">📊 Trend Strategy Backtester</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Multi-strategy stock backtesting, ranking, and portfolio allocation tool.</div>', unsafe_allow_html=True)
+st.markdown('<div class="big-title">📊 Multi-Strategy Backtester</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Test Trend and Pullback strategies across your selected stock list.</div>', unsafe_allow_html=True)
+
+st.info("""
+**This backtest compares two strategies:**
+1. **Trend Strategy** — finds stocks already in strong long-term uptrends.
+2. **Pullback Strategy** — finds strong stocks after a healthy pullback.
+""")
 
 st.divider()
 
@@ -61,8 +67,31 @@ st.divider()
 col1, col2, col3 = st.columns([2, 1, 1])
 
 with col1:
-    ticker_input = st.text_input("Enter stock symbols", st.session_state.tickers)
-    st.session_state.tickers = ticker_input
+    DEFAULT_TICKERS = "NVDA, MSFT, AAPL, AMZN, GOOGL, META, TSLA, AVGO, LLY, JPM, V, MA, COST, WMT"
+    ticker_input = st.text_area(
+        "Choose stocks to test",
+        value=st.session_state.get("ticker_input", DEFAULT_TICKERS),
+        help="Enter symbols separated by commas, like TSLA, NVDA, GOOGL"
+    )
+    st.session_state.ticker_input = ticker_input
+
+    TICKERS = [
+        t.strip().upper()
+        for t in ticker_input.replace("\\n", ",").split(",")
+        if t.strip()
+    ]
+    st.caption(f"Testing {len(TICKERS)} stocks: {', '.join(TICKERS)}")
+
+    b1, b2, b3 = st.columns(3)
+    if b1.button("Mag 7"):
+        st.session_state.ticker_input = "NVDA, MSFT, AAPL, AMZN, GOOGL, META, TSLA"
+        st.rerun()
+    if b2.button("Mega Cap 14"):
+        st.session_state.ticker_input = "NVDA, MSFT, AAPL, AMZN, GOOGL, META, TSLA, AVGO, LLY, JPM, V, MA, COST, WMT"
+        st.rerun()
+    if b3.button("Clear"):
+        st.session_state.ticker_input = ""
+        st.rerun()
 
 with col2:
     start_date_input = st.date_input("Start Date", st.session_state.start_date)
@@ -71,62 +100,63 @@ with col2:
 with col3:
     initial_capital = st.number_input("Portfolio Capital", value=10000, step=1000)
 
-TICKERS = [t.strip().upper() for t in ticker_input.split(",") if t.strip()]
-
-run_button = st.button("🚀 Run Backtest", use_container_width=True)
+run_button = st.button("🚀 Run Multi-Strategy Backtest", use_container_width=True)
 
 # -----------------------------
 # Backtest
 # -----------------------------
 if run_button:
-    all_results = []
-    equity_curves = {}
-
-    progress = st.progress(0)
-
-    for i, ticker in enumerate(TICKERS):
-        st.write(f"Running {ticker}...")
-
-        df = download_data_cached(ticker, st.session_state.start_date)
-
-        if df is None:
-            progress.progress((i + 1) / len(TICKERS))
-            continue
-
-        trend_stats, trend_equity = trend_strategy(ticker, df)
-        pullback_stats, pullback_equity = pullback_strategy(ticker, df)
-
-        if trend_stats:
-            all_results.append(trend_stats)
-            equity_curves[(ticker, "Trend")] = trend_equity
-
-        if pullback_stats:
-            all_results.append(pullback_stats)
-            equity_curves[(ticker, "Pullback")] = pullback_equity
-
-        progress.progress((i + 1) / len(TICKERS))
-
-    results_df = pd.DataFrame(all_results)
-
-    if results_df.empty:
-        st.warning("No valid results found.")
+    if not TICKERS:
+        st.warning("Please enter at least one stock symbol.")
     else:
-        best_per_stock = (
-            results_df.sort_values("Ranking Score", ascending=False)
-            .groupby("Ticker")
-            .head(1)
-            .sort_values("Ranking Score", ascending=False)
-        )
+        all_results = []
+        equity_curves = {}
 
-        top5 = best_per_stock.head(5).copy()
+        progress = st.progress(0)
 
-        top5["Allocation %"] = top5["Ranking Score"] / top5["Ranking Score"].sum() * 100
-        top5["Allocation $"] = top5["Allocation %"] / 100 * initial_capital
+        for i, ticker in enumerate(TICKERS):
+            st.write(f"Running {ticker}...")
 
-        st.session_state.backtest_results = results_df
-        st.session_state.best_per_stock = best_per_stock
-        st.session_state.top5 = top5
-        st.session_state.equity_curves = equity_curves
+            df = download_data_cached(ticker, st.session_state.start_date)
+
+            if df is None:
+                progress.progress((i + 1) / len(TICKERS))
+                continue
+
+            trend_stats, trend_equity = trend_strategy(ticker, df)
+            pullback_stats, pullback_equity = pullback_strategy(ticker, df)
+
+            if trend_stats:
+                all_results.append(trend_stats)
+                equity_curves[(ticker, "Trend")] = trend_equity
+
+            if pullback_stats:
+                all_results.append(pullback_stats)
+                equity_curves[(ticker, "Pullback")] = pullback_equity
+
+            progress.progress((i + 1) / len(TICKERS))
+
+        results_df = pd.DataFrame(all_results)
+
+        if results_df.empty:
+            st.warning("No valid results found.")
+        else:
+            best_per_stock = (
+                results_df.sort_values("Ranking Score", ascending=False)
+                .groupby("Ticker")
+                .head(1)
+                .sort_values("Ranking Score", ascending=False)
+            )
+
+            top5 = best_per_stock.head(5).copy()
+
+            top5["Allocation %"] = top5["Ranking Score"] / top5["Ranking Score"].sum() * 100
+            top5["Allocation $"] = top5["Allocation %"] / 100 * initial_capital
+
+            st.session_state.backtest_results = results_df
+            st.session_state.best_per_stock = best_per_stock
+            st.session_state.top5 = top5
+            st.session_state.equity_curves = equity_curves
 
 
 # -----------------------------
@@ -146,7 +176,7 @@ if st.session_state.top5 is not None:
     m3.metric("Best Strategy", top5.iloc[0]["Strategy"])
     m4.metric("Top Score", top5.iloc[0]["Ranking Score"])
 
-    st.subheader("🔥 Top 5 Stocks to Buy Now")
+    st.subheader("🔥 Top 5 Opportunities")
 
     st.dataframe(
         top5[

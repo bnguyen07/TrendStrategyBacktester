@@ -13,17 +13,20 @@ This tool helps identify high-quality buy/sell opportunities by combining **tren
 
 ## 🖼️ App Screenshots
 
-### 📌 Active Signals
-![Active Signals](screenshots/active-signals.png)
+### 🏠 Home Page
+![Home Page](screenshots/home.png)
 
-### 📊 Backtest Results
+### 📊 Backtester & Results
+![Backtest Settings](screenshots/back-tests.png)
 ![Backtest Results](screenshots/back-test-results.png)
+![Equity Curves](screenshots/back-test-results-2.png)
 
-### 📈 All Backtests
-![Backtests](screenshots/back-tests.png)
+### 📌 Active Signal Scanner
+![Signal Scanner](screenshots/active-signals.png)
+![Signal Details](screenshots/active-signals-2.png)
 
-### 🔥 Top 5 Stocks
-![Top 5](screenshots/top-5-stocks-to-buy.png)
+### 📄 Terms & Conditions
+![Terms](screenshots/terms-and-conditions.png)
 
 ---
 

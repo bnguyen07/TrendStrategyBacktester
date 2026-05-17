@@ -75,8 +75,8 @@ st.subheader("📸 Previews")
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    st.image("screenshots/back-test-results.png", caption="Detailed Backtest Results & Equity Curves", use_column_width=True)
+    st.image("screenshots/back-test-results-2.png", caption="Detailed Backtest Results & Equity Curves", use_column_width=True)
 with c2:
-    st.image("screenshots/top-5-stocks-to-buy.png", caption="Top 5 Opportunities Ranked by Score", use_column_width=True)
+    st.image("screenshots/back-tests.png", caption="Multi-Strategy Testing Engine", use_column_width=True)
 with c3:
-    st.image("screenshots/active-signals.png", caption="Active Signal Scanner", use_column_width=True)
+    st.image("screenshots/active-signals-2.png", caption="Active Signal Scanner", use_column_width=True)

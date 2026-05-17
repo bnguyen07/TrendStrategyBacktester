@@ -1,7 +1,7 @@
 # 📊 Trend Strategy Backtester
 
 🚀 **Live App:**  
-👉 https://trend-backtester.streamlit.app/
+👉 https://trendstrategybacktester.streamlit.app/
 
 ---
 
